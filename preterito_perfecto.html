@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kahoot-Stil Quiz: Pretérito perfecto</title>
+  <style>
+    :root {
+      --bg1: #46178f;
+      --bg2: #25076b;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #2563eb;
+      --yellow: #f59e0b;
+      --purple: #7c3aed;
+      --shadow: 0 18px 40px rgba(0,0,0,.25);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top, var(--bg1), var(--bg2));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(980px, 100%);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      margin-bottom: 18px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.25);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 26px 28px;
+      text-align: center;
+      background: #f8fafc;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(26px, 4vw, 44px);
+      color: #111827;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .question-wrap {
+      padding: 34px 28px 26px;
+    }
+
+    .question {
+      min-height: 96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: clamp(24px, 4vw, 42px);
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 28px;
+    }
+
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    button.answer {
+      border: 0;
+      color: white;
+      min-height: 104px;
+      border-radius: 18px;
+      font-size: clamp(18px, 2.5vw, 27px);
+      font-weight: 800;
+      cursor: pointer;
+      padding: 18px;
+      transition: transform .08s ease, filter .15s ease, opacity .15s ease;
+      box-shadow: 0 8px 18px rgba(0,0,0,.18);
+    }
+
+    button.answer:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); }
+    button.answer:disabled { cursor: default; opacity: .82; }
+
+    .a0 { background: #e21b3c; }
+    .a1 { background: #1368ce; }
+    .a2 { background: #d89e00; }
+    .a3 { background: #26890c; }
+
+    .correct { outline: 8px solid var(--green); filter: brightness(1.08); }
+    .wrong { outline: 8px solid var(--red); filter: grayscale(.25) brightness(.8); }
+
+    .feedback {
+      margin-top: 22px;
+      min-height: 36px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .feedback.good { color: var(--green); }
+    .feedback.bad { color: var(--red); }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 28px 28px;
+    }
+
+    .main-btn {
+      border: 0;
+      border-radius: 999px;
+      background: #111827;
+      color: white;
+      padding: 14px 24px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      display: none;
+    }
+
+    .main-btn.show { display: inline-block; }
+
+    .progress {
+      height: 12px;
+      background: rgba(255,255,255,.22);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: #fff;
+      transition: width .25s ease;
+    }
+
+    .final {
+      padding: 44px 28px;
+      text-align: center;
+      display: none;
+    }
+
+    .final.show { display: block; }
+    .quiz.hide { display: none; }
+
+    .score-big {
+      font-size: clamp(44px, 8vw, 88px);
+      font-weight: 900;
+      margin: 16px 0;
+      color: var(--purple);
+    }
+
+    @media (max-width: 700px) {
+      .answers { grid-template-columns: 1fr; }
+      button.answer { min-height: 82px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div class="badge" id="counter">Frage 1 / 25</div>
+      <div class="badge" id="score">Punkte: 0</div>
+    </div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+
+    <section class="card">
+      <div class="header">
+        <h1>Spanisch: Pretérito perfecto</h1>
+        <p class="subtitle">Wähle die richtige Antwort. Die Lösung erscheint erst nach dem Anklicken.</p>
+      </div>
+
+      <div class="quiz" id="quiz">
+        <div class="question-wrap">
+          <div class="question" id="question"></div>
+          <div class="answers" id="answers"></div>
+          <div class="feedback" id="feedback"></div>
+        </div>
+        <div class="controls">
+          <button class="main-btn" id="nextBtn">Nächste Frage</button>
+        </div>
+      </div>
+
+      <div class="final" id="final">
+        <h2>Quiz beendet!</h2>
+        <div class="score-big" id="finalScore"></div>
+        <p id="finalText"></p>
+        <button class="main-btn show" onclick="restartQuiz()">Nochmal spielen</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      { q: "Yo ______ comido paella.", options: ["he", "has", "ha", "hemos"], correct: 0 },
+      { q: "Nosotros ______ viajado a Madrid.", options: ["han", "hemos", "he", "has"], correct: 1 },
+      { q: "Tú ______ estudiado mucho hoy.", options: ["has", "ha", "he", "hemos"], correct: 0 },
+      { q: "Ellos ______ visto la película.", options: ["ha", "hemos", "han", "has"], correct: 2 },
+      { q: "Ella ______ hablado con su amiga.", options: ["he", "has", "ha", "han"], correct: 2 },
+      { q: "¿Cuál es el participio de hacer?", options: ["hacido", "hecho", "haco", "haciendo"], correct: 1 },
+      { q: "¿Cuál es el participio de ver?", options: ["visto", "veído", "verido", "viendo"], correct: 0 },
+      { q: "Hoy ______ terminado mis deberes.", options: ["he", "has", "ha", "han"], correct: 0 },
+      { q: "Esta semana ______ trabajado mucho. (nosotros)", options: ["hemos", "han", "he", "has"], correct: 0 },
+      { q: "¿______ comido ya? (tú)", options: ["Has", "He", "Ha", "Hemos"], correct: 0 },
+      { q: "Mi hermano ______ roto el móvil.", options: ["ha", "he", "han", "hemos"], correct: 0 },
+      { q: "¿Cuál es el participio de romper?", options: ["rompido", "roto", "rompado", "rompiendo"], correct: 1 },
+      { q: "Ellas ______ llegado tarde.", options: ["ha", "hemos", "han", "has"], correct: 2 },
+      { q: "Este mes ______ leído tres libros. (yo)", options: ["he", "has", "ha", "hemos"], correct: 0 },
+      { q: "¿Cuál es correcto?", options: ["he comí", "he comido", "he comer", "he comiendo"], correct: 1 },
+      { q: "¿______ ido al cine? (vosotros)", options: ["Habéis", "Han", "Hemos", "Has"], correct: 0 },
+      { q: "Vosotros ______ jugado al fútbol.", options: ["habéis", "han", "hemos", "has"], correct: 0 },
+      { q: "Nunca ______ probado sushi. (yo)", options: ["he", "has", "ha", "han"], correct: 0 },
+      { q: "Ya ______ hecho la tarea. (ellos)", options: ["ha", "han", "hemos", "has"], correct: 1 },
+      { q: "¿Cuál es el participio de abrir?", options: ["abrido", "abierto", "abrato", "abriendo"], correct: 1 },
+      { q: "Hoy no ______ salido de casa. (yo)", options: ["he", "has", "ha", "han"], correct: 0 },
+      { q: "¿Cuál es el participio de escribir?", options: ["escribido", "escrito", "escribo", "escribado"], correct: 1 },
+      { q: "Este año ______ aprendido mucho. (nosotros)", options: ["hemos", "han", "he", "has"], correct: 0 },
+      { q: "¿______ visto a María hoy? (tú)", options: ["Has", "He", "Ha", "Hemos"], correct: 0 },
+      { q: "¿Cuál frase ist korrekt?", options: ["He ido a España", "He fui a España", "He ir a España", "He yendo a España"], correct: 0 }
+    ];
+
+    let current = 0;
+    let points = 0;
+    let answered = false;
+
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const feedbackEl = document.getElementById("feedback");
+    const nextBtn = document.getElementById("nextBtn");
+    const counterEl = document.getElementById("counter");
+    const scoreEl = document.getElementById("score");
+    const barEl = document.getElementById("bar");
+    const quizEl = document.getElementById("quiz");
+    const finalEl = document.getElementById("final");
+    const finalScoreEl = document.getElementById("finalScore");
+    const finalTextEl = document.getElementById("finalText");
+
+    function loadQuestion() {
+      answered = false;
+      const item = questions[current];
+      questionEl.textContent = item.q;
+      answersEl.innerHTML = "";
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+      nextBtn.classList.remove("show");
+      counterEl.textContent = `Frage ${current + 1} / ${questions.length}`;
+      scoreEl.textContent = `Punkte: ${points}`;
+      barEl.style.width = `${(current / questions.length) * 100}%`;
+
+      item.options.forEach((option, index) => {
+        const btn = document.createElement("button");
+        btn.className = `answer a${index}`;
+        btn.textContent = option;
+        btn.onclick = () => chooseAnswer(index, btn);
+        answersEl.appendChild(btn);
+      });
+    }
+
+    function chooseAnswer(index) {
+      if (answered) return;
+      answered = true;
+      const item = questions[current];
+      const buttons = Array.from(document.querySelectorAll("button.answer"));
+
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === item.correct) btn.classList.add("correct");
+        if (i === index && i !== item.correct) btn.classList.add("wrong");
+      });
+
+      if (index === item.correct) {
+        points++;
+        feedbackEl.textContent = "✅ Richtig!";
+        feedbackEl.classList.add("good");
+      } else {
+        feedbackEl.textContent = `❌ Falsch! Richtig ist: ${item.options[item.correct]}`;
+        feedbackEl.classList.add("bad");
+      }
+
+      scoreEl.textContent = `Punkte: ${points}`;
+      nextBtn.textContent = current === questions.length - 1 ? "Ergebnis anzeigen" : "Nächste Frage";
+      nextBtn.classList.add("show");
+    }
+
+    nextBtn.addEventListener("click", () => {
+      current++;
+      if (current < questions.length) {
+        loadQuestion();
+      } else {
+        showFinal();
+      }
+    });
+
+    function showFinal() {
+      quizEl.classList.add("hide");
+      finalEl.classList.add("show");
+      barEl.style.width = "100%";
+      counterEl.textContent = "Fertig";
+      scoreEl.textContent = `Punkte: ${points}`;
+      finalScoreEl.textContent = `${points} / ${questions.length}`;
+      const percent = Math.round((points / questions.length) * 100);
+      finalTextEl.textContent = percent >= 85 ? "¡Excelente!" : percent >= 65 ? "Gut gemacht!" : "Weiter üben – du schaffst das!";
+    }
+
+    function restartQuiz() {
+      current = 0;
+      points = 0;
+      quizEl.classList.remove("hide");
+      finalEl.classList.remove("show");
+      loadQuestion();
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
